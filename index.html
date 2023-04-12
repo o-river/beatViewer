@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)http://smoothiecharts.org/examples/example1.html -->
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script type="text/javascript" src="./smoothie.js"></script>
+    <script type="text/javascript">
+
+        // Randomly add a data point every 500ms
+        var random = new TimeSeries();
+        setInterval(function () {
+            random.append(new Date().getTime(), new Date().getSeconds() % 2);
+        }, 1000);
+        setInterval(function () {
+            illuminanceSeries.append(new Date().getTime(), new Date().getSeconds() % 2);
+        }, 1000);
+
+        var illuminanceSeries = new TimeSeries();
+
+        var illuminanceChartStyle = {
+            // スクロール速度
+            millisPerPixel: 100 
+        }
+
+        var illuminanceSeriesStyle = {
+            strokeStyle: 'rgba(0, 255, 255, 1)',
+            fillStyle: 'rgba(0, 255, 0, 0.2)',
+            lineWidth: 4,
+            interpolation: 'step'
+        }
+
+        function createTimeline() {
+            var chart = new SmoothieChart();
+            chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+            chart.streamTo(document.getElementById("chart"), 500);
+
+            var illuminaceChart = new SmoothieChart(illuminanceChartStyle);
+            illuminaceChart.addTimeSeries(illuminanceSeries, illuminanceSeriesStyle);
+            illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
+        }
+
+        let port;
+        var outputValue = "";
+
+        async function onConnectButtonClick() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+
+                while (port.readable) {
+                    const reader = port.readable.getReader();
+
+                    try {
+                        while (true) {
+                            const { value, done } = await reader.read();
+                            if (done) {
+                                addSerial("Canceled\n");
+                                break;
+                            }
+                            var inputValue = new TextDecoder().decode(value);
+                            addSerial(inputValue);
+
+                            outputValue += inputValue.replace(/\|/g, ",").replace("#", "").replace("t", "").replace("*", " ").replace("\r", "");
+                            outputValue = outputValue.replace(/^.*>.*$/g, "")
+
+                            var parsed = outputValue.match(/@[^@]*$/)[0]
+                            addGraphdata(outputValue);
+                        }
+                    } catch (error) {
+                        addSerial("Error: Read" + error + "\n");
+                    } finally {
+                        reader.releaseLock();
+                    }
+                }
+            } catch (error) {
+                addSerial("Error: Open" + error + "\n");
+            }
+        }
+
+        function addSerial(msg) {
+            var textarea = document.getElementById('outputArea');
+            textarea.value += msg;
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+
+        function addGraphdata(msg) {
+            var textarea = document.getElementById('outputArea2');
+            textarea.value += msg;
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+
+
+        async function sendSerial() {
+            var text = document.getElementById('sendInput').value;
+            document.getElementById('sendInput').value = "";
+
+            const encoder = new TextEncoder();
+            const writer = port.writable.getWriter();
+            await writer.write(encoder.encode(text + "\n"));
+            writer.releaseLock();
+        }
+    </script>
+</head>
+
+<body onload="createTimeline()">
+
+    <p>The <em>hello world</em> of <a href="http://smoothiecharts.org/">Smoothie Charts</a>. View source.</p>
+
+    <canvas id="chart" width="400" height="100"></canvas>
+
+    <canvas id="illuminanceChart" width="400" height="100"></canvas>
+
+    <h1>Web Serial API Console</h1>
+    <button onclick="onConnectButtonClick()">Connect</button> 115200 Only
+    <br>
+
+    <input type="text" id="sendInput">
+    <input type="button" value="Send" onclick="sendSerial();">
+    <br>
+    <textarea cols="80" rows="6" id="outputArea" readonly=""></textarea>
+
+    <br>
+    <textarea cols="80" rows="6" id="outputArea2" readonly=""></textarea>
+
+
+    <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
+    </div>
+</body>
+
+</html>
