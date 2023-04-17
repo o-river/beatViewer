@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0048)http://smoothiecharts.org/examples/example1.html -->
 <html>
 
 <head>
@@ -12,15 +11,19 @@
         setInterval(function () {
             random.append(new Date().getTime(), new Date().getSeconds() % 2);
         }, 1000);
-        setInterval(function () {
-            illuminanceSeries.append(new Date().getTime(), new Date().getSeconds() % 2);
-        }, 1000);
+
 
         var illuminanceSeries = new TimeSeries();
 
         var illuminanceChartStyle = {
             // スクロール速度
-            millisPerPixel: 100 
+            millisPerPixel: 100,
+            grid: {
+                millisPerLine: 5000,
+                verticalSections: 8
+            },
+            maxValue: 1100,
+            minValue: -100
         }
 
         var illuminanceSeriesStyle = {
@@ -41,7 +44,17 @@
         }
 
         let port;
+        var inputValueBuffer = "";
         var outputValue = "";
+        var outputValueBuffer = "";
+        var outputValueSet = "";
+
+        var data = [];
+
+        function appendDataToSeries(newdata = 0) {
+            illuminanceSeries.append(new Date().getTime(), newdata)
+        }
+
 
         async function onConnectButtonClick() {
             try {
@@ -59,13 +72,37 @@
                                 break;
                             }
                             var inputValue = new TextDecoder().decode(value);
-                            addSerial(inputValue);
+                            setTextToArea(1, inputValue);
 
-                            outputValue += inputValue.replace(/\|/g, ",").replace("#", "").replace("t", "").replace("*", " ").replace("\r", "");
-                            outputValue = outputValue.replace(/^.*>.*$/g, "")
+                            inputValueBuffer += inputValue;
+                            console.log(inputValueBuffer.split("\r", 1)[0]);
+                            setTextToArea(2, inputValueBuffer);
 
-                            var parsed = outputValue.match(/@[^@]*$/)[0]
-                            addGraphdata(outputValue);
+                            // 余計な文字の消去
+                            outputValue = inputValue.replace(/\|/g, ",").replace("t", "").replace("*", "").replace(/ /g, "");
+                            // プロンプトの「> 」行の消去
+                            outputValue = outputValue.replace(/^.*>.*$/g, "");
+                            // 無駄な空行の消去
+                            outputValue = outputValue.replace(/^\r/, "");
+                            outputValueBuffer += outputValue;
+                            console.log("output: " + outputValueBuffer);
+                            console.log(outputValue.match(/\r/));
+                            if (outputValue.match(/\r/)) {
+                                outputValueSet += outputValueBuffer;
+                                setTextToArea(4, outputValueBuffer);
+                                var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
+                                console.log("jsondata: " + jsondata);
+                                data.push([new Date(), jsondata]);
+                                appendDataToSeries(jsondata.duty[0]);
+                                outputValueBuffer = "";
+                            }
+
+                            // var parsed = outputValue.match(/@[^@]*$/)[0];
+
+                            setTextToArea(3, outputValue);
+                            setTextToArea(5, outputValueSet);
+                            console.log(data);
+
                         }
                     } catch (error) {
                         addSerial("Error: Read" + error + "\n");
@@ -79,7 +116,7 @@
         }
 
         function addSerial(msg) {
-            var textarea = document.getElementById('outputArea');
+            var textarea = document.getElementById('outputArea1');
             textarea.value += msg;
             textarea.scrollTop = textarea.scrollHeight;
         }
@@ -88,6 +125,39 @@
             var textarea = document.getElementById('outputArea2');
             textarea.value += msg;
             textarea.scrollTop = textarea.scrollHeight;
+        }
+
+        function addTextToArea(area, msg) {
+            var textarea = document.getElementById('outputArea' + area);
+            textarea.value += msg;
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+
+        function setTextToArea(area, msg) {
+            var textarea = document.getElementById('outputArea' + area);
+            textarea.value = msg;
+            textarea.scrollTop = textarea.scrollHeight;
+        }
+
+        function makeJSONfromValueBuffer(buf) {
+            if (buf[0] != "@") {
+                console.error("ValueBuffer has no data sign '@'.");
+                return null;
+            }
+            buf = buf.slice(1);
+            var json = new Object;
+            var b = buf.split(",");
+            console.log(b);
+            json.time = Number(b.pop());
+            json.id = b.pop();
+            json.duty = new Array();
+            json.lqi = new Array();
+            b = b.map(Number);
+            while (b.length) {
+                json.duty.push(b.shift());
+                json.lqi.push(b.shift());
+            }
+            return json;
         }
 
 
@@ -100,12 +170,30 @@
             await writer.write(encoder.encode(text + "\n"));
             writer.releaseLock();
         }
+
+        function onSaveButtonClick() {
+            // 保存するJSONファイルの名前
+            const fileName = "beatdata.json";
+
+            // データをJSON形式の文字列に変換する。
+            const strdata = JSON.stringify(data);
+
+            // HTMLのリンク要素を生成する。
+            const link = document.createElement("a");
+
+            // リンク先にJSON形式の文字列データを置いておく。
+            link.href = "data:text/plain," + encodeURIComponent(strdata);
+
+            // 保存するJSONファイルの名前をリンクに設定する。
+            link.download = fileName;
+
+            // ファイルを保存する。
+            link.click();
+        }
     </script>
 </head>
 
 <body onload="createTimeline()">
-
-    <p>The <em>hello world</em> of <a href="http://smoothiecharts.org/">Smoothie Charts</a>. View source.</p>
 
     <canvas id="chart" width="400" height="100"></canvas>
 
@@ -114,15 +202,25 @@
     <h1>Web Serial API Console</h1>
     <button onclick="onConnectButtonClick()">Connect</button> 115200 Only
     <br>
+    <button onclick="onSaveButtonClick()">Save</button>
+    <br>
 
     <input type="text" id="sendInput">
     <input type="button" value="Send" onclick="sendSerial();">
     <br>
-    <textarea cols="80" rows="6" id="outputArea" readonly=""></textarea>
+    <textarea cols="100" rows="6" id="outputArea1" readonly=""></textarea>
 
     <br>
-    <textarea cols="80" rows="6" id="outputArea2" readonly=""></textarea>
+    <textarea cols="100" rows="6" id="outputArea2" readonly=""></textarea>
 
+    <br>
+    <textarea cols="100" rows="6" id="outputArea3" readonly=""></textarea>
+
+    <br>
+    <textarea cols="100" rows="6" id="outputArea4" readonly=""></textarea>
+
+    <br>
+    <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
 
     <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
     </div>
