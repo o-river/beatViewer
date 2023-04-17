@@ -93,7 +93,7 @@
                                 var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
                                 console.log("jsondata: " + jsondata);
                                 data.push([new Date(), jsondata]);
-                                appendDataToSeries(jsondata.duty[0]);
+                                appendDataToSeries(jsondata.duty[3]); //使うセンサIDが配列番号
                                 outputValueBuffer = "";
                             }
 
@@ -140,16 +140,17 @@
         }
 
         function makeJSONfromValueBuffer(buf) {
-            if (buf[0] != "@") {
-                console.error("ValueBuffer has no data sign '@'.");
-                return null;
-            }
-            buf = buf.slice(1);
+            // if (buf[0] != "@") {
+            //     console.error("ValueBuffer has no data sign '@'.");
+            //     console.log(buf);
+            //     return null;
+            // }
+            buf = buf.replace("@", "").replace("#", "");
             var json = new Object;
             var b = buf.split(",");
             console.log(b);
             json.time = Number(b.pop());
-            json.id = b.pop();
+            json.id = Number(b.pop());
             json.duty = new Array();
             json.lqi = new Array();
             b = b.map(Number);
@@ -195,12 +196,13 @@
 
 <body onload="createTimeline()">
 
-    <canvas id="chart" width="400" height="100"></canvas>
+    <h1>BeatSensor Logger</h1>
 
-    <canvas id="illuminanceChart" width="400" height="100"></canvas>
+    <canvas id="chart" width="1" height="1"></canvas>
 
-    <h1>Web Serial API Console</h1>
-    <button onclick="onConnectButtonClick()">Connect</button> 115200 Only
+    <canvas id="illuminanceChart" width="1000" height="400"></canvas>
+    <br>
+    <button onclick="onConnectButtonClick()">Connect</button>
     <br>
     <button onclick="onSaveButtonClick()">Save</button>
     <br>
