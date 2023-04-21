@@ -191,6 +191,26 @@
             // ファイルを保存する。
             link.click();
         }
+
+        function CSVnize(){
+            var reader = new FileReader();
+            var obj;
+            reader.onload = function(e){
+                obj = JSON.parse(e.target.result);
+                console.log(obj);
+                var csvstr = "time, duty\n";
+                for (const data of obj) {
+                    csvstr += data[1].time + ", " + data[1].duty[3] + "\n";
+                }
+                const fileName = "beatdata.csv";
+                const link = document.createElement("a");
+                link.href = "data:text/plain," + encodeURIComponent(csvstr);
+                link.download = fileName;
+                link.click();
+            }
+            var text = reader.readAsText(document.getElementById("jsonfile").files[0]);
+            console.log(text);
+        }
     </script>
 </head>
 
@@ -206,6 +226,8 @@
     <br>
     <button onclick="onSaveButtonClick()">Save</button>
     <br>
+    <input type="file" id="jsonfile">
+    <button onclick="CSVnize()">get CSV</button>
 
     <input type="text" id="sendInput">
     <input type="button" value="Send" onclick="sendSerial();">
