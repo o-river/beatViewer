@@ -192,24 +192,59 @@
             link.click();
         }
 
-        function CSVnize(){
+        function getCSVfromJSONFile(elementId) {
             var reader = new FileReader();
+            var text = reader.readAsText(document.getElementById(elementId).files[0]);
             var obj;
-            reader.onload = function(e){
+            reader.onload = function (e) {
                 obj = JSON.parse(e.target.result);
-                console.log(obj);
-                var csvstr = "time, duty\n";
-                for (const data of obj) {
-                    csvstr += data[1].time + ", " + data[1].duty[3] + "\n";
-                }
-                const fileName = "beatdata.csv";
-                const link = document.createElement("a");
-                link.href = "data:text/plain," + encodeURIComponent(csvstr);
-                link.download = fileName;
-                link.click();
+                // console.log(obj);
+
+                // var csvstr = "time, duty\n";
+                // for (const data of obj) {
+                //     csvstr += data[1].time + ", " + data[1].duty[3] + "\n";
+                // }
+
+                var csvstr = makeCSVfromObject(obj);
+
+                downloadFilefromString(csvstr, "beatdata.csv");
             }
-            var text = reader.readAsText(document.getElementById("jsonfile").files[0]);
-            console.log(text);
+        }
+
+        function downloadFilefromString(str, fileName = "beatdata.csv") {
+            console.log("dl: \n" + str);
+            const link = document.createElement("a");
+            link.href = "data:text/plain," + encodeURIComponent(str);
+            link.download = fileName;
+            link.click();
+        }
+
+        function makeCSVfromObject(obj) {
+            // todo: objの型式があっているか確認のif分岐
+
+            /*
+            [
+                [
+                    Date,
+                    {
+                        time[ ],
+                        duty[ ]   
+                    }
+                ]
+            ]
+            */
+            var csvstr = "time, duty, interval\n";
+            var beforetime = 0;
+            for (const data of obj) {
+                // todo: id=3になっているがこれを変数化
+                if (data[1].time != null) {
+                    csvstr += data[1].time + ", " + data[1].duty[3] + ", ";
+                    csvstr += (beforetime ? String(Number(data[1].time) - beforetime) : "") + "\n";
+                    beforetime = Number(data[1].time);
+                }
+            }
+            // console.log(csvstr)
+            return csvstr;
         }
     </script>
 </head>
@@ -224,11 +259,11 @@
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
-    <button onclick="onSaveButtonClick()">Save</button>
+    <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
-    <input type="file" id="jsonfile">
-    <button onclick="CSVnize()">get CSV</button>
-
+    <input type="file" id="jsonfile" accept="application/json,.json">
+    <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
+    <br>
     <input type="text" id="sendInput">
     <input type="button" value="Send" onclick="sendSerial();">
     <br>
