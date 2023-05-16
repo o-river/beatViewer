@@ -32,6 +32,16 @@
             lineWidth: 4,
             interpolation: 'step'
         }
+        
+        function getIlluminanceSeriesStyle(id = 0) {
+            var style = {}
+            // 34の根拠: 色相が1周するうちに10個程度の色が取れてかつIDが増えて2周目になっても1周目とかぶりにくそうな値
+            style.strokeStyle = 'hsla(' + (id * 34) + 'deg, 80%, 50%, 1)';
+            style.fillStyle = 'hsla(' + (id * 34) + 'deg, 80%, 50%, 0.2)';
+            style.lineWidth = 4;
+            style.interpolation = 'step';
+            return style;
+        }
 
         function createTimeline() {
             var chart = new SmoothieChart();
@@ -39,7 +49,7 @@
             chart.streamTo(document.getElementById("chart"), 500);
 
             var illuminaceChart = new SmoothieChart(illuminanceChartStyle);
-            illuminaceChart.addTimeSeries(illuminanceSeries, illuminanceSeriesStyle);
+            illuminaceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(4));
             illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
         }
 
