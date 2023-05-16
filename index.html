@@ -55,6 +55,11 @@
             illuminanceSeries.append(new Date().getTime(), newdata)
         }
 
+        function plotTestPoint(plotdata) {
+            console.log(plotdata);
+            appendDataToSeries(plotdata);
+        }
+
 
         async function onConnectButtonClick() {
             try {
@@ -260,6 +265,10 @@
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
+    <br>
+    <input type="number" id="testPlotData" value="512">
+    <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value))">plotTestPoint</button>
+    <button onclick="plotTestPoint(Math.random() * 1024)">plotRandomPoint</button>
     <br>
     <input type="file" id="jsonfile" accept="application/json,.json">
     <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
