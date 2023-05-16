@@ -12,9 +12,10 @@
             random.append(new Date().getTime(), new Date().getSeconds() % 2);
         }, 1000);
 
+        // 最大センサ数 Seriesが作られる数．つまりグラフの本数．とりあえず10個．
+        var numberOfIlluminaceSensors = 10;
 
-        var illuminanceSeries = new TimeSeries();
-
+        
         var illuminanceChartStyle = {
             // スクロール速度
             millisPerPixel: 100,
@@ -25,7 +26,7 @@
             maxValue: 1100,
             minValue: -100
         }
-
+        
         var illuminanceSeriesStyle = {
             strokeStyle: 'hsla(150deg, 80%, 50%, 1)',
             fillStyle: 'hsla(150deg, 50%, 50%, 0.2)',
@@ -42,14 +43,23 @@
             style.interpolation = 'step';
             return style;
         }
-
+        
         function createTimeline() {
             var chart = new SmoothieChart();
             chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
             chart.streamTo(document.getElementById("chart"), 500);
-
+            
+            
+            var illuminaceSerieses = [];
             var illuminaceChart = new SmoothieChart(illuminanceChartStyle);
-            illuminaceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(4));
+            for (let id = 1; id <= numberOfIlluminaceSensors; id++) {
+                var illuminanceSeries = new TimeSeries();
+                illuminaceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(id));
+                var sensorObject = {};
+                sensorObject.id = id;
+                sensorObject.series = illuminanceSeries;
+                illuminaceSerieses.append(sensorObject);
+            }
             illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
         }
 
