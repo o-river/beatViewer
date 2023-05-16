@@ -58,7 +58,7 @@
                 var sensorObject = {};
                 sensorObject.id = id;
                 sensorObject.series = illuminanceSeries;
-                illuminaceSerieses.append(sensorObject);
+                illuminaceSerieses.push(sensorObject);
             }
             illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
         }
