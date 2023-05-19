@@ -15,6 +15,7 @@
         // 最大センサ数 Seriesが作られる数．つまりグラフの本数．とりあえず10個．
         var numberOfIlluminaceSensors = 10;
 
+        var illuminaceSerieses = {};
         
         var illuminanceChartStyle = {
             // スクロール速度
@@ -50,15 +51,11 @@
             chart.streamTo(document.getElementById("chart"), 500);
             
             
-            var illuminaceSerieses = [];
             var illuminaceChart = new SmoothieChart(illuminanceChartStyle);
             for (let id = 1; id <= numberOfIlluminaceSensors; id++) {
                 var illuminanceSeries = new TimeSeries();
                 illuminaceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(id));
-                var sensorObject = {};
-                sensorObject.id = id;
-                sensorObject.series = illuminanceSeries;
-                illuminaceSerieses.push(sensorObject);
+                illuminaceSerieses[id] = illuminanceSeries;
             }
             illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
         }
@@ -71,13 +68,14 @@
 
         var data = [];
 
-        function appendDataToSeries(newdata = 0) {
-            illuminanceSeries.append(new Date().getTime(), newdata)
+        function appendDataToSeries(newdata = 0, id = 1) {
+            console.log(newdata);
+            console.log(id);
+            illuminaceSerieses[id].append(new Date().getTime(), newdata);
         }
 
-        function plotTestPoint(plotdata) {
-            console.log(plotdata);
-            appendDataToSeries(plotdata);
+        function plotTestPoint(plotdata, plotid) {
+            appendDataToSeries(plotdata, plotid);
         }
 
 
@@ -286,9 +284,10 @@
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
-    <input type="number" id="testPlotData" value="512">
-    <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value))">plotTestPoint</button>
-    <button onclick="plotTestPoint(Math.random() * 1024)">plotRandomPoint</button>
+    <input type="number" id="testPlotData" value="512" width="4">
+    @id:<input type="number" id="testPlotId" value="1" width="2">
+    <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
+    <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
     <br>
     <input type="file" id="jsonfile" accept="application/json,.json">
     <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
