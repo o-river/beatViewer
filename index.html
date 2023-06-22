@@ -22,10 +22,10 @@
             millisPerPixel: 100,
             grid: {
                 millisPerLine: 5000,
-                verticalSections: 8
+                verticalSections: 10
             },
-            maxValue: 1100,
-            minValue: -100
+            maxValue: 1024 + 128,
+            minValue: 0 - 128
         }
         
         var illuminanceSeriesStyle = {
@@ -129,7 +129,7 @@
                                 var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
                                 console.log("jsondata: " + jsondata);
                                 data.push([new Date(), jsondata]);
-                                appendDataToSeries(jsondata.duty[3]); //使うセンサIDが配列番号
+                                appendDataToSeries(jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
                                 outputValueBuffer = "";
                             }
 
