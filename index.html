@@ -78,6 +78,19 @@
             appendDataToSeries(plotdata, plotid);
         }
 
+        function makeLegend() {
+            var legend = document.getElementById("legend");
+            legend.innerHTML = "id: "
+            for (let id = 0; id < numberOfIlluminaceSensors; id++) {
+                var led = document.createElement("span");
+                led.className = "legend-content";
+                led.style.paddingLeft = led.style.paddingRight = "0.5rem";
+                led.style.color = 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
+                led.innerHTML = '━ ' + id;
+                legend.appendChild(led);
+            }
+        }
+
 
         async function onConnectButtonClick() {
             try {
@@ -279,6 +292,10 @@
     <canvas id="chart" width="1" height="1"></canvas>
 
     <canvas id="illuminanceChart" width="1000" height="400"></canvas>
+
+    <div id="legend">
+        
+    </div>
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
