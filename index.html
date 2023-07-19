@@ -11,11 +11,11 @@
         setInterval(function () {
             random.append(new Date().getTime(), new Date().getSeconds() % 2);
         }, 1000);
-
+        
         // 最大センサ数 Seriesが作られる数．つまりグラフの本数．とりあえず10個．
-        var numberOfIlluminaceSensors = 10;
+        var numberOfilluminanceSensors = 10;
 
-        var illuminaceSerieses = {};
+        var illuminanceSerieses = {};
         
         var illuminanceChartStyle = {
             // スクロール速度
@@ -25,7 +25,9 @@
                 verticalSections: 10
             },
             maxValue: 1024 + 128,
-            minValue: 0 - 128
+            minValue: 0 - 128,
+            responsive: true,
+            // tooltip: true,
         }
         
         var illuminanceSeriesStyle = {
@@ -51,13 +53,16 @@
             chart.streamTo(document.getElementById("chart"), 500);
             
             
-            var illuminaceChart = new SmoothieChart(illuminanceChartStyle);
-            for (let id = 1; id <= numberOfIlluminaceSensors; id++) {
+            var illuminanceChart = new SmoothieChart(illuminanceChartStyle);
+            for (let id = 1; id <= numberOfilluminanceSensors; id++) {
                 var illuminanceSeries = new TimeSeries();
-                illuminaceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(id));
-                illuminaceSerieses[id] = illuminanceSeries;
+                illuminanceChart.addTimeSeries(illuminanceSeries, getIlluminanceSeriesStyle(id));
+                illuminanceSerieses[id] = illuminanceSeries;
             }
-            illuminaceChart.streamTo(document.getElementById("illuminanceChart"), 0)
+            illuminanceChart.streamTo(document.getElementById("illuminanceChart"), 0)
+
+            illuminanceChartCanvas = document.getElementById("illuminanceChart");
+            ctx = illuminanceChartCanvas.getContext("2d");
         }
 
         let port;
@@ -68,20 +73,34 @@
 
         var data = [];
 
-        function appendDataToSeries(newdata = 0, id = 1) {
+        function drawDataPoint(x, y, radius, color) {
+            ctx.beginPath();
+            ctx.arc(x,y,radius,0,2 * Math.PI, false);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.closePath();
+        }
+
+
+
+        function appendDataToSeries(timestamp = new Date().getTime(), newdata = 0, id = 1) {
             console.log(newdata);
             console.log(id);
-            illuminaceSerieses[id].append(new Date().getTime(), newdata);
+            // var timestamp = new Date().getTime();
+            illuminanceSerieses[id].append(timestamp, newdata);
+            // var xPos = smoothie.options.timestampFormatter(timestamp);
+            // var yPos = smoothie.options.scaleY(newdata);
+            // drawDataPoint(timestamp, newdata, 5, 'hsla(' + (id * 34) + 'deg, 80%, 50%, 1)');
         }
 
         function plotTestPoint(plotdata, plotid) {
-            appendDataToSeries(plotdata, plotid);
+            appendDataToSeries(_, plotdata, plotid);
         }
 
         function makeLegend() {
             var legend = document.getElementById("legend");
             legend.innerHTML = "id: "
-            for (let id = 0; id < numberOfIlluminaceSensors; id++) {
+            for (let id = 0; id < numberOfilluminanceSensors; id++) {
                 var led = document.createElement("span");
                 led.className = "legend-content";
                 led.style.paddingLeft = led.style.paddingRight = "0.5rem";
@@ -121,16 +140,21 @@
                             // 無駄な空行の消去
                             outputValue = outputValue.replace(/^\r/, "");
                             outputValueBuffer += outputValue;
-                            console.log("output: " + outputValueBuffer);
+                            console.log("output:       " + outputValue);
+                            console.log("outputBuffer: " + outputValueBuffer);
                             console.log(outputValue.match(/\r/));
-                            if (outputValue.match(/\r/)) {
+                            console.log(outputValueBuffer.match(/#\d{1},\d+(\r\n)?/));
+                            if (outputValueBuffer.match(/#\d\d?,\d+(\r\n)?/)) {
                                 outputValueSet += outputValueBuffer;
                                 setTextToArea(4, outputValueBuffer);
                                 var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
-                                console.log("jsondata: " + jsondata);
+                                console.log("jsondata: ")
+                                console.log(jsondata);
                                 data.push([new Date(), jsondata]);
-                                appendDataToSeries(jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
+                                console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
+                                appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
                                 outputValueBuffer = "";
+                                console.log("wawawa");
                             }
 
                             // var parsed = outputValue.match(/@[^@]*$/)[0];
@@ -141,7 +165,8 @@
 
                         }
                     } catch (error) {
-                        addSerial("Error: Read" + error + "\n");
+                        addSerial("Error: (l." + error.lineNumber + ") " + error + "\n");
+                        // console.error(error);
                     } finally {
                         reader.releaseLock();
                     }
@@ -152,7 +177,7 @@
         }
 
         function addSerial(msg) {
-            var textarea = document.getElementById('outputArea1');
+            var textarea = document.getElementById('outputArea0');
             textarea.value += msg;
             textarea.scrollTop = textarea.scrollHeight;
         }
@@ -181,10 +206,13 @@
             //     console.log(buf);
             //     return null;
             // }
+            
             buf = buf.replace("@", "").replace("#", "");
             var json = new Object;
             var b = buf.split(",");
+
             console.log(b);
+
             json.time = Number(b.pop());
             json.id = Number(b.pop());
             json.duty = new Array();
@@ -291,7 +319,7 @@
 
     <canvas id="chart" width="1" height="1"></canvas>
 
-    <canvas id="illuminanceChart" width="1000" height="400"></canvas>
+    <canvas id="illuminanceChart" style="width: 100%; height: 400px;" width="1000" height="400"></canvas>
 
     <div id="legend">
         
@@ -312,22 +340,29 @@
     <input type="text" id="sendInput">
     <input type="button" value="Send" onclick="sendSerial();">
     <br>
-    <textarea cols="100" rows="6" id="outputArea1" readonly=""></textarea>
 
-    <br>
-    <textarea cols="100" rows="6" id="outputArea2" readonly=""></textarea>
-
-    <br>
-    <textarea cols="100" rows="6" id="outputArea3" readonly=""></textarea>
-
-    <br>
-    <textarea cols="100" rows="6" id="outputArea4" readonly=""></textarea>
-
-    <br>
-    <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
-
-    <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
-    </div>
+    <details>
+        <summary>デバッグ用出力</summary>
+        <textarea cols="100" rows="6" id="outputArea0" readonly=""></textarea>
+        
+        <br>
+        <textarea cols="100" rows="6" id="outputArea1" readonly=""></textarea>
+        
+        <br>
+        <textarea cols="100" rows="6" id="outputArea2" readonly=""></textarea>
+        
+        <br>
+        <textarea cols="100" rows="6" id="outputArea3" readonly=""></textarea>
+        
+        <br>
+        <textarea cols="100" rows="6" id="outputArea4" readonly=""></textarea>
+        
+        <br>
+        <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
+    </details>
+        
+        <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
+        </div>
 </body>
 
 </html>
