@@ -260,6 +260,7 @@
             var reader = new FileReader();
             var text = reader.readAsText(document.getElementById(elementId).files[0]);
             var obj;
+            var id = Number(document.getElementById("csvid")).value
             reader.onload = function (e) {
                 obj = JSON.parse(e.target.result);
                 // console.log(obj);
@@ -269,7 +270,7 @@
                 //     csvstr += data[1].time + ", " + data[1].duty[3] + "\n";
                 // }
 
-                var csvstr = makeCSVfromObject(obj);
+                var csvstr = makeCSVfromObject(obj, id);
 
                 downloadFilefromString(csvstr, "beatdata.csv");
             }
@@ -283,28 +284,40 @@
             link.click();
         }
 
-        function makeCSVfromObject(obj) {
+        function makeCSVfromObject(obj, id = 5) {
             // todo: objの型式があっているか確認のif分岐
 
             /*
+            obj = 
             [
                 [
-                    Date,
+                    Date,               -> data[0]
                     {
-                        time[ ],
-                        duty[ ]   
-                    }
+                        time: [
+
+                        ],
+                        duty: [
+
+                        ]   
+                    }                   -> data[1]
+                ].
+                [
+                    ...
                 ]
             ]
             */
             var csvstr = "time, duty, interval\n";
+            var startdate = new Date(obj[0][0]);
+            var starttime = startdate.getTime();
             var beforetime = 0;
             for (const data of obj) {
-                // todo: id=3になっているがこれを変数化
                 if (data[1].time != null) {
-                    csvstr += data[1].time + ", " + data[1].duty[3] + ", ";
-                    csvstr += (beforetime ? String(Number(data[1].time) - beforetime) : "") + "\n";
-                    beforetime = Number(data[1].time);
+                    var date = new Date(data[0]);
+                    // csvstr += data[1].time + ",";
+                    csvstr += date.toLocaleString('ja-JP', { timeZone: 'JST' }) + "." + date.getMilliseconds() + ",";
+                    csvstr += data[1].duty[id] + ",";
+                    csvstr += (beforetime ? String((date.getTime() - beforetime) / 1000.0) : "") + "\n";
+                    beforetime = date.getTime();
                 }
             }
             // console.log(csvstr)
@@ -335,6 +348,7 @@
     <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
     <br>
     <input type="file" id="jsonfile" accept="application/json,.json">
+    Extract ID: <input type="number" id="csvid", value="5", width="2">
     <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
     <br>
     <input type="text" id="sendInput">
