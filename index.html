@@ -83,7 +83,7 @@
 
 
 
-        function appendDataToSeries(timestamp = new Date().getTime(), newdata = 0, id = 1) {
+        function appendDataToSeries(timestamp, newdata = 0, id = 1) {
             console.log(newdata);
             console.log(id);
             // var timestamp = new Date().getTime();
@@ -94,7 +94,7 @@
         }
 
         function plotTestPoint(plotdata, plotid) {
-            appendDataToSeries(_, plotdata, plotid);
+            appendDataToSeries(new Date().getTime(), plotdata, plotid);
         }
 
         function makeLegend() {
