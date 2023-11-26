@@ -238,22 +238,35 @@
                             console.log("output:       " + outputValue);
                             console.log("outputBuffer: " + outputValueBuffer);
                             console.log(outputValue.match(/\r/));
-                            console.log(outputValueBuffer.match(/#\d{1},\d+(\r\n)?/));
-                            if (outputValueBuffer.match(/#\d\d?,\d+(\r\n)?/)) {
-                                outputValueSet += outputValueBuffer;
-                                setTextToArea(4, outputValueBuffer);
-                                var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
-                                console.log("jsondata: ")
-                                console.log(jsondata);
-                                data.push([new Date(), jsondata]);
-                                // jsonを受け取って表を更新する
-                                refreshTable(jsondata);
-                                // マトリクスを更新する
-                                refreshLightMatrix(jsondata);
-                                console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
-                                appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
-                                outputValueBuffer = "";
-                                console.log("wawawa");
+                            //console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
+                            //if (outputValueBuffer.match(/#\d,\d+(\r\n)?/)) {
+                            var splited = outputValueBuffer.split(/@/);
+                            console.log(splited);
+                            if(splited[0] == ""){
+                                for (var i = 1; i < splited.length; i++){
+                                    console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
+                                    if(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)){
+                                        outputValueSet += splited[i];
+                                        // outputValueSet += outputValueBuffer;
+                                        setTextToArea(4, splited[i]);
+                                        var jsondata = makeJSONfromValueBuffer(splited[i]);
+                                        console.log("jsondata: ")
+                                        console.log(jsondata);
+                                        data.push([new Date(), jsondata]);
+                                        // jsonを受け取って表を更新する
+                                        refreshTable(jsondata);
+                                        // マトリクスを更新する
+                                        refreshLightMatrix(jsondata);
+                                        console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
+                                        appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
+                                        outputValueBuffer = splited.slice(i+1).join('@');
+                                        console.log("joined-slicedsplited:")
+                                        console.log(outputValueBuffer);
+                                        console.log("wawawa");
+                                    }
+                                    else {
+                                    }
+                                }
                             }
 
                             // var parsed = outputValue.match(/@[^@]*$/)[0];
