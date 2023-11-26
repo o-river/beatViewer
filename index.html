@@ -27,7 +27,7 @@
             maxValue: 1024 + 128,
             minValue: 0 - 128,
             responsive: true,
-            // tooltip: true,
+            tooltip: true
         }
         
         var illuminanceSeriesStyle = {
@@ -106,6 +106,10 @@
             return 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
         }
 
+        function getDutyColor(duty, hue = 30) {
+            return "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
+        }
+
         function makeLegend() {
             var legend = document.getElementById("legend");
             legend.innerHTML = "id: "
@@ -153,8 +157,56 @@
             row.getElementsByClassName("table-duty")[0].innerHTML = json.duty[json.id];
             row.style.display = '';
         }
-        
 
+        // 3x3配置図関係
+        function getLightMatrixNode(id) {
+            var name = document.createElement("div");
+            name.className = "name";
+            name.innerHTML = "ID: " + id;
+            name.style.color = getIdColor(id);
+            var duty = document.createElement("div");
+            duty.className = "duty";
+            duty.innerHTML = "duty: " + "---";
+            var sensor = document.createElement("div");
+            sensor.classList.add("sensor", "id" + String(id));
+            sensor.appendChild(name);
+            sensor.appendChild(duty);
+
+            sensor.style.backgroundColor = getDutyColor(0);
+            sensor.style.textAlign = "center";
+            sensor.style.display = "flex";
+            sensor.style.flexFlow = "column";
+            sensor.style.justifyContent = "center";
+            sensor.style.alignItems = "center";
+            return sensor;
+        }
+
+        function getLightMatrix() {
+            var matrix = document.createElement("div");
+            matrix.style.display = "grid";
+            matrix.style.width = "24rem";
+            matrix.style.height = "24rem";
+            matrix.style.gridTemplateColumns = "1fr 1fr 1fr";
+            matrix.style.gridTemplateRows = "1fr 1fr 1fr";
+            matrix.style.gap = "2rem"
+            for (var id = 1; id < numberOfilluminanceSensors; id++) {
+                var node = getLightMatrixNode(id);
+                matrix.appendChild(node);
+            }
+            return matrix;
+        }
+        
+        function makeLightMatrix() {
+            var matrix = document.getElementById("matrix");
+            matrix.appendChild(getLightMatrix());
+        }
+        
+        function refreshLightMatrix(json) {
+            var matrix = document.getElementById("matrix");
+            var sensor = matrix.getElementsByClassName("sensor")[json.id - 1];
+            sensor.getElementsByClassName("duty")[0].innerHTML = "duty: " + json.duty[json.id];
+            sensor.style.backgroundColor = getDutyColor(json.duty[json.id]);
+        }
 
         async function onConnectButtonClick() {
             try {
@@ -196,6 +248,8 @@
                                 data.push([new Date(), jsondata]);
                                 // jsonを受け取って表を更新する
                                 refreshTable(jsondata);
+                                // マトリクスを更新する
+                                refreshLightMatrix(jsondata);
                                 console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
                                 appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
                                 outputValueBuffer = "";
@@ -372,9 +426,22 @@
         window.onload = function() {
             createTimeline();
             makeTable();
+            makeLightMatrix();
             // makeLegend();
         };
     </script>
+
+    <style>
+        div.smoothie-chart-tooltip {
+            background: #444;
+            padding: 1em;
+            margin-top: 20px;
+            font-family: consolas;
+            color: white;
+            font-size: 10px;
+            pointer-events: none;
+          }
+    </style>
 </head>
 
 <body>
@@ -382,9 +449,9 @@
     <h1>BeatSensor Logger</h1>
 
     <!-- <canvas id="chart" width="1" height="1"></canvas> -->
-    <div id="chart-container" style="display: flex">
+    <div id="chart-container" style="display: flex; justify-content: center; align-items: center;">
         <div id="chart" style="flex: 1;">
-            <canvas id="illuminanceChart" style="width: 100%; height: 400px;" width="1000" height="400"></canvas>
+            <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
         </div>
         <div id="table" style="width: 10rem;">
             <table style="text-align: right;">
@@ -399,6 +466,7 @@
                 </tbody>
             </table>
         </div>
+        <div id="matrix" style="width: 25rem;"></div>
     </div>
         
     <div id="legend"></div>
