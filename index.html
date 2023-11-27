@@ -348,6 +348,10 @@
             writer.releaseLock();
         }
 
+        function clearSerialTextarea() {
+            document.getElementById('sendInput').value = "";
+        }
+        
         function onSaveButtonClick() {
             // 保存するJSONファイルの名前
             const fileName = "beatdata.json";
@@ -501,6 +505,7 @@
         <br>
         <input type="text" id="sendInput">
         <input type="button" value="Send" onclick="sendSerial();">
+        <input type="button" value="Clear" onclick="clearSerialTextarea();">
         <br>
     </details>
 
@@ -523,7 +528,6 @@
         <br>
         <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
     </details>
-        
         <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
         </div>
 </body>
