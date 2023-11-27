@@ -27,7 +27,7 @@
             maxValue: 1024 + 128,
             minValue: 0 - 128,
             responsive: true,
-            // tooltip: true,
+            tooltip: true
         }
         
         var illuminanceSeriesStyle = {
@@ -48,9 +48,9 @@
         }
         
         function createTimeline() {
-            var chart = new SmoothieChart();
-            chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
-            chart.streamTo(document.getElementById("chart"), 500);
+            // var chart = new SmoothieChart();
+            // chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
+            // chart.streamTo(document.getElementById("chart"), 500);
             
             
             var illuminanceChart = new SmoothieChart(illuminanceChartStyle);
@@ -95,30 +95,125 @@
 
         function plotTestPoint(plotdata, plotid) {
             appendDataToSeries(new Date().getTime(), plotdata, plotid);
+            var d = new Array(10);
+            d[plotid] = plotdata;
+            var j = {"id": plotid, "duty": d};
+            refreshTable(j);
+        }
+
+        // IDの色をHSLAで返す
+        function getIdColor(id) {
+            return 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
+        }
+
+        function getDutyColor(duty, hue = 30) {
+            return "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
         }
 
         function makeLegend() {
             var legend = document.getElementById("legend");
             legend.innerHTML = "id: "
-            for (let id = 0; id < numberOfilluminanceSensors; id++) {
+            for (var id = 1; id < numberOfilluminanceSensors; id++) {
                 var led = document.createElement("span");
                 led.className = "legend-content";
                 led.style.paddingLeft = led.style.paddingRight = "0.5rem";
-                led.style.color = 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
+                led.style.color = getIdColor(id);
                 led.innerHTML = '━ ' + id;
                 legend.appendChild(led);
             }
         }
 
+        // 一覧表関連
+        function makeTable(dataobj) {
+            var table = document.getElementById("table");
+            var thead = table.getElementsByTagName("thead")[0];
+            var tbody = table.getElementsByTagName("tbody")[0];
+
+            var columnList = ["id", "duty"];
+            
+            for (var id = 1; id < numberOfilluminanceSensors; id++) {
+                var row = document.createElement("tr");
+                var legend = document.createElement("td");
+                legend.innerHTML = "━";
+                legend.style.color = getIdColor(id);
+                row.appendChild(legend);
+
+                columnList.forEach(function(colname){
+                    var col = document.createElement("td");
+                    col.className = "table-" + colname;
+                    row.appendChild(col);
+                })
+                row.className = "table-row";
+                //row.style.display = 'none';
+               tbody.appendChild(row);
+            }
+        }
+
+        function refreshTable(json) {
+            var table = document.getElementById("table");
+            var tbody = table.getElementsByTagName("tbody")[0];
+            var row = tbody.getElementsByTagName("tr")[json.id - 1]; //id1が0番目
+            row.getElementsByClassName("table-id")[0].innerHTML = json.id;
+            row.getElementsByClassName("table-duty")[0].innerHTML = json.duty[json.id];
+            row.style.display = '';
+        }
+
+        // 3x3配置図関係
+        function getLightMatrixNode(id) {
+            var name = document.createElement("div");
+            name.className = "name";
+            name.innerHTML = "ID: " + id;
+            name.style.color = getIdColor(id);
+            var duty = document.createElement("div");
+            duty.className = "duty";
+            duty.innerHTML = "duty: " + "---";
+            var sensor = document.createElement("div");
+            sensor.classList.add("sensor", "id" + String(id));
+            sensor.appendChild(name);
+            sensor.appendChild(duty);
+
+            sensor.style.backgroundColor = getDutyColor(0);
+            sensor.style.textAlign = "center";
+            sensor.style.display = "flex";
+            sensor.style.flexFlow = "column";
+            sensor.style.justifyContent = "center";
+            sensor.style.alignItems = "center";
+            return sensor;
+        }
+
+        function getLightMatrix() {
+            var matrix = document.createElement("div");
+            matrix.style.display = "grid";
+            matrix.style.width = "24rem";
+            matrix.style.height = "24rem";
+            matrix.style.gridTemplateColumns = "1fr 1fr 1fr";
+            matrix.style.gridTemplateRows = "1fr 1fr 1fr";
+            matrix.style.gap = "2rem"
+            for (var id = 1; id < numberOfilluminanceSensors; id++) {
+                var node = getLightMatrixNode(id);
+                matrix.appendChild(node);
+            }
+            return matrix;
+        }
+        
+        function makeLightMatrix() {
+            var matrix = document.getElementById("matrix");
+            matrix.appendChild(getLightMatrix());
+        }
+        
+        function refreshLightMatrix(json) {
+            var matrix = document.getElementById("matrix");
+            var sensor = matrix.getElementsByClassName("sensor")[json.id - 1];
+            sensor.getElementsByClassName("duty")[0].innerHTML = "duty: " + json.duty[json.id];
+            sensor.style.backgroundColor = getDutyColor(json.duty[json.id]);
+        }
 
         async function onConnectButtonClick() {
             try {
                 port = await navigator.serial.requestPort();
                 await port.open({ baudRate: 115200 });
-
                 while (port.readable) {
                     const reader = port.readable.getReader();
-
                     try {
                         while (true) {
                             const { value, done } = await reader.read();
@@ -143,18 +238,35 @@
                             console.log("output:       " + outputValue);
                             console.log("outputBuffer: " + outputValueBuffer);
                             console.log(outputValue.match(/\r/));
-                            console.log(outputValueBuffer.match(/#\d{1},\d+(\r\n)?/));
-                            if (outputValueBuffer.match(/#\d\d?,\d+(\r\n)?/)) {
-                                outputValueSet += outputValueBuffer;
-                                setTextToArea(4, outputValueBuffer);
-                                var jsondata = makeJSONfromValueBuffer(outputValueBuffer);
-                                console.log("jsondata: ")
-                                console.log(jsondata);
-                                data.push([new Date(), jsondata]);
-                                console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
-                                appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
-                                outputValueBuffer = "";
-                                console.log("wawawa");
+                            //console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
+                            //if (outputValueBuffer.match(/#\d,\d+(\r\n)?/)) {
+                            var splited = outputValueBuffer.split(/@/);
+                            console.log(splited);
+                            if(splited[0] == ""){
+                                for (var i = 1; i < splited.length; i++){
+                                    console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
+                                    if(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)){
+                                        outputValueSet += splited[i];
+                                        // outputValueSet += outputValueBuffer;
+                                        setTextToArea(4, splited[i]);
+                                        var jsondata = makeJSONfromValueBuffer(splited[i]);
+                                        console.log("jsondata: ")
+                                        console.log(jsondata);
+                                        data.push([new Date(), jsondata]);
+                                        // jsonを受け取って表を更新する
+                                        refreshTable(jsondata);
+                                        // マトリクスを更新する
+                                        refreshLightMatrix(jsondata);
+                                        console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
+                                        appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
+                                        outputValueBuffer = splited.slice(i+1).join('@');
+                                        console.log("joined-slicedsplited:")
+                                        console.log(outputValueBuffer);
+                                        console.log("wawawa");
+                                    }
+                                    else {
+                                    }
+                                }
                             }
 
                             // var parsed = outputValue.match(/@[^@]*$/)[0];
@@ -323,37 +435,74 @@
             // console.log(csvstr)
             return csvstr;
         }
+
+        window.onload = function() {
+            createTimeline();
+            makeTable();
+            makeLightMatrix();
+            // makeLegend();
+        };
     </script>
+
+    <style>
+        div.smoothie-chart-tooltip {
+            background: #444;
+            padding: 1em;
+            margin-top: 20px;
+            font-family: consolas;
+            color: white;
+            font-size: 10px;
+            pointer-events: none;
+          }
+    </style>
 </head>
 
-<body onload="createTimeline()">
+<body>
 
     <h1>BeatSensor Logger</h1>
 
-    <canvas id="chart" width="1" height="1"></canvas>
-
-    <canvas id="illuminanceChart" style="width: 100%; height: 400px;" width="1000" height="400"></canvas>
-
-    <div id="legend">
-        
+    <!-- <canvas id="chart" width="1" height="1"></canvas> -->
+    <div id="chart-container" style="display: flex; justify-content: center; align-items: center;">
+        <div id="chart" style="flex: 1;">
+            <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
+        </div>
+        <div id="table" style="width: 10rem;">
+            <table style="text-align: right;">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>ID</th>
+                        <th>duty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div id="matrix" style="width: 25rem;"></div>
     </div>
+        
+    <div id="legend"></div>
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
-    <input type="number" id="testPlotData" value="512" width="4">
-    @id:<input type="number" id="testPlotId" value="1" width="2">
-    <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
-    <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
-    <br>
-    <input type="file" id="jsonfile" accept="application/json,.json">
-    Extract ID: <input type="number" id="csvid", value="5", width="2">
-    <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
-    <br>
-    <input type="text" id="sendInput">
-    <input type="button" value="Send" onclick="sendSerial();">
-    <br>
+    <details>
+        <summary>デバッグ用入力</summary>
+        <input type="number" id="testPlotData" value="512" width="4">
+        @id:<input type="number" id="testPlotId" value="1" width="2">
+        <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
+        <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
+        <br>
+        <input type="file" id="jsonfile" accept="application/json,.json">
+        Extract ID: <input type="number" id="csvid", value="5", width="2">
+        <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
+        <br>
+        <input type="text" id="sendInput">
+        <input type="button" value="Send" onclick="sendSerial();">
+        <br>
+    </details>
 
     <details>
         <summary>デバッグ用出力</summary>
