@@ -3,6 +3,11 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="epoch.min.css">
+    <script src="epoch.min.js"></script>
+
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
 
@@ -444,6 +449,17 @@
         };
     </script>
 
+    <script>
+        var dataEpoch = [
+            { label: 'Layer 1', values: [ {x: 0, y: 0}, {x: 1, y: 1}, {x: 2, y: 2} ] },
+            { label: 'Layer 2', values: [ {x: 0, y: 0}, {x: 1, y: 1}, {x: 2, y: 4} ] }
+        ];
+        var areaChartInstance = $('#area').epoch({
+            type: 'area',
+            data: dataEpoch,
+            axes: ['left', 'right', 'bottom']
+        });
+    </script>
     <style>
         div.smoothie-chart-tooltip {
             background: #444;
@@ -481,7 +497,10 @@
         </div>
         <div id="matrix" style="width: 25rem;"></div>
     </div>
-        
+    
+    <div id="area" class="epoch category10" style="height: 200px;"></div>
+
+
     <div id="legend"></div>
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
