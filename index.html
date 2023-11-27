@@ -3,6 +3,10 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
 
@@ -455,6 +459,33 @@
             pointer-events: none;
           }
     </style>
+
+    <script>
+        const config = {
+            type: 'line',
+            data: {
+              datasets: [
+                {
+                  data: []
+                },
+                {
+                  data: []
+                }
+              ]
+            },
+            options: {
+              scales: {
+                x: {
+                  type: 'realtime'
+                }
+              }
+            }
+        };
+        const myChart = new Chart(
+            document.getElementById('myChart'), 
+            config
+        );
+    </script>
 </head>
 
 <body>
@@ -482,6 +513,10 @@
         <div id="matrix" style="width: 25rem;"></div>
     </div>
         
+    <div>
+        <canvas id="myChart"></canvas>
+    </div>
+
     <div id="legend"></div>
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
