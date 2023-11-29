@@ -1,57 +1,47 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart.js Testing Page</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
 
-    <script>
-        const config = {
-            type: 'line',
-            data: {
-              datasets: [
-                {
-                  data: []
-                },
-                {
-                  data: []
-                }
-              ]
-            },
-            options: {
-              scales: {
-                x: {
-                  type: 'realtime',
-                  realtime: {
-                    onRefresh: chart => {
-                      chart.data.datasets.forEach(dataset => {
-                        dataset.data.push({
-                          x: Date.now(),
-                          y: Math.random()
-                        });
-                      });
-                    }
-                  }
-                }
-              }
-            }
-        };
-    </script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chart.js Testing Page</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
+
+  <script src="./data.js"></script>
+  <script src="./config.js"></script>
 </head>
+
 <body>
-    <h1>Chart.js Testing Page</h1>
-    <div>
-        <canvas id="myChart"></canvas>
-    </div>
-    <script>
-        const myChart = new Chart(
-            document.getElementById('myChart'),
-            config
-        );
-    </script>
+  <h1>Chart.js Testing Page</h1>
+  <div>
+    <canvas id="myChart"></canvas>
+  </div>
+  <input type="number" value="512" id="duty">
+  <input type="number" value="1" id="cid">
+  <button onclick="addPlot();">addPlot</button>
+  <script>
+    function getIdColor(id, lumi = 45, alpha = 1) {
+      return 'hsla(' + (id * 34) + 'deg, 80%, ' + lumi + '%, ' + alpha + ')';
+    }
+
+    const numberOfilluminanceSensors = 10;
+    for(i=0; i<numberOfilluminanceSensors; i++) {
+      var dataset = {
+        data: [],
+        label: "dataset " + (i+1),
+        borderColor: getIdColor(i, 50),
+        backgroundColor: getIdColor(i, 50, 0.8)
+      }
+      config.data.datasets.push(dataset);
+    }
+    const myChart = new Chart(
+      document.getElementById('myChart'),
+      config
+    );
+  </script>
 </body>
+
 </html>

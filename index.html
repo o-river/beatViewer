@@ -7,6 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
+    <script src="./config.js"></script>
+    <script src="./data.js"></script>
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
 
@@ -15,12 +17,12 @@
         setInterval(function () {
             random.append(new Date().getTime(), new Date().getSeconds() % 2);
         }, 1000);
-        
+
         // 最大センサ数 Seriesが作られる数．つまりグラフの本数．とりあえず10個．
         var numberOfilluminanceSensors = 10;
 
         var illuminanceSerieses = {};
-        
+
         var illuminanceChartStyle = {
             // スクロール速度
             millisPerPixel: 100,
@@ -33,14 +35,14 @@
             responsive: true,
             tooltip: true
         }
-        
+
         var illuminanceSeriesStyle = {
             strokeStyle: 'hsla(150deg, 80%, 50%, 1)',
             fillStyle: 'hsla(150deg, 50%, 50%, 0.2)',
             lineWidth: 4,
             interpolation: 'step'
         }
-        
+
         function getIlluminanceSeriesStyle(id = 0) {
             var style = {}
             // 34の根拠: 色相が1周するうちに10個程度の色が取れてかつIDが増えて2周目になっても1周目とかぶりにくそうな値
@@ -50,13 +52,13 @@
             style.interpolation = 'step';
             return style;
         }
-        
+
         function createTimeline() {
             // var chart = new SmoothieChart();
             // chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
             // chart.streamTo(document.getElementById("chart"), 500);
-            
-            
+
+
             var illuminanceChart = new SmoothieChart(illuminanceChartStyle);
             for (let id = 1; id <= numberOfilluminanceSensors; id++) {
                 var illuminanceSeries = new TimeSeries();
@@ -79,7 +81,7 @@
 
         function drawDataPoint(x, y, radius, color) {
             ctx.beginPath();
-            ctx.arc(x,y,radius,0,2 * Math.PI, false);
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
             ctx.fillStyle = color;
             ctx.fill();
             ctx.closePath();
@@ -97,21 +99,30 @@
             // drawDataPoint(timestamp, newdata, 5, 'hsla(' + (id * 34) + 'deg, 80%, 50%, 1)');
         }
 
+        // data.js へ移動
+        // function appendDataToChart(timestamp, newdata = 0, id = 1) {}
+
         function plotTestPoint(plotdata, plotid) {
             appendDataToSeries(new Date().getTime(), plotdata, plotid);
             var d = new Array(10);
             d[plotid] = plotdata;
-            var j = {"id": plotid, "duty": d};
+            var j = { "id": plotid, "duty": d };
             refreshTable(j);
         }
 
         // IDの色をHSLAで返す
-        function getIdColor(id) {
-            return 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
+        function getHSLAColor(h = 0, s = 100, l = 100, a = 1.0) {
+            return 'hsla(' + h + 'deg,' + s + '%,' + l + '%,' + a + ')';
+        }
+
+        function getIdColor(id, lumi = 45, alpha = 1) {
+            return getHSLAColor(id * 34, 80, lumi, alpha);
+            // 'hsla(' + (id * 34) + 'deg, 80%, ' + lumi + '%, ' + alpha + ')';
         }
 
         function getDutyColor(duty, hue = 30) {
-            return "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
+            return getHSLAColor(hue, (duty / 10.24), 80, 1.0);
+            // "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
         }
 
         function makeLegend() {
@@ -134,7 +145,7 @@
             var tbody = table.getElementsByTagName("tbody")[0];
 
             var columnList = ["id", "duty"];
-            
+
             for (var id = 1; id < numberOfilluminanceSensors; id++) {
                 var row = document.createElement("tr");
                 var legend = document.createElement("td");
@@ -142,14 +153,14 @@
                 legend.style.color = getIdColor(id);
                 row.appendChild(legend);
 
-                columnList.forEach(function(colname){
+                columnList.forEach(function (colname) {
                     var col = document.createElement("td");
                     col.className = "table-" + colname;
                     row.appendChild(col);
                 })
                 row.className = "table-row";
                 //row.style.display = 'none';
-               tbody.appendChild(row);
+                tbody.appendChild(row);
             }
         }
 
@@ -199,12 +210,12 @@
             }
             return matrix;
         }
-        
+
         function makeLightMatrix() {
             var matrix = document.getElementById("matrix");
             matrix.appendChild(getLightMatrix());
         }
-        
+
         function refreshLightMatrix(json) {
             var matrix = document.getElementById("matrix");
             var sensor = matrix.getElementsByClassName("sensor")[json.id - 1];
@@ -246,10 +257,10 @@
                             //if (outputValueBuffer.match(/#\d,\d+(\r\n)?/)) {
                             var splited = outputValueBuffer.split(/@/);
                             console.log(splited);
-                            if(splited[0] == ""){
-                                for (var i = 1; i < splited.length; i++){
+                            if (splited[0] == "") {
+                                for (var i = 1; i < splited.length; i++) {
                                     console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
-                                    if(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)){
+                                    if (splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)) {
                                         outputValueSet += splited[i];
                                         // outputValueSet += outputValueBuffer;
                                         setTextToArea(4, splited[i]);
@@ -263,7 +274,8 @@
                                         refreshLightMatrix(jsondata);
                                         console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
                                         appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
-                                        outputValueBuffer = splited.slice(i+1).join('@');
+                                        appendDataToChart( new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id);
+                                        outputValueBuffer = splited.slice(i + 1).join('@');
                                         console.log("joined-slicedsplited:")
                                         console.log(outputValueBuffer);
                                         console.log("wawawa");
@@ -322,7 +334,7 @@
             //     console.log(buf);
             //     return null;
             // }
-            
+
             buf = buf.replace("@", "").replace("#", "");
             var json = new Object;
             var b = buf.split(",");
@@ -440,11 +452,15 @@
             return csvstr;
         }
 
-        window.onload = function() {
+        window.onload = function () {
             createTimeline();
             makeTable();
             makeLightMatrix();
             // makeLegend();
+            const myChart = new Chart(
+                document.getElementById('myChart'),
+                config
+            );
         };
     </script>
 
@@ -457,35 +473,8 @@
             color: white;
             font-size: 10px;
             pointer-events: none;
-          }
+        }
     </style>
-
-    <script>
-        const config = {
-            type: 'line',
-            data: {
-              datasets: [
-                {
-                  data: []
-                },
-                {
-                  data: []
-                }
-              ]
-            },
-            options: {
-              scales: {
-                x: {
-                  type: 'realtime'
-                }
-              }
-            }
-        };
-        const myChart = new Chart(
-            document.getElementById('myChart'), 
-            config
-        );
-    </script>
 </head>
 
 <body>
@@ -512,7 +501,7 @@
         </div>
         <div id="matrix" style="width: 25rem;"></div>
     </div>
-        
+
     <div>
         <canvas id="myChart"></canvas>
     </div>
@@ -527,11 +516,13 @@
         <summary>デバッグ用入力</summary>
         <input type="number" id="testPlotData" value="512" width="4">
         @id:<input type="number" id="testPlotId" value="1" width="2">
-        <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
-        <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
+        <button
+            onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
+        <button
+            onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
         <br>
         <input type="file" id="jsonfile" accept="application/json,.json">
-        Extract ID: <input type="number" id="csvid", value="5", width="2">
+        Extract ID: <input type="number" id="csvid" , value="5" , width="2">
         <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
         <br>
         <input type="text" id="sendInput">
@@ -542,25 +533,37 @@
     <details>
         <summary>デバッグ用出力</summary>
         <textarea cols="100" rows="6" id="outputArea0" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea1" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea2" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea3" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea4" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
     </details>
-        
-        <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
-        </div>
+
+    <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
+    </div>
+
+    <script>
+        for(i=0; i<numberOfilluminanceSensors; i++) {
+            var dataset = {
+              data: [],
+              label: "dataset " + (i+1),
+              borderColor: getIdColor(i, 50),
+              backgroundColor: getIdColor(i, 50, 0.8)
+            }
+            config.data.datasets.push(dataset);
+          }
+    </script>
 </body>
 
 </html>
