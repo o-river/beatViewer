@@ -269,16 +269,16 @@
                                         console.log(jsondata);
                                         data.push([new Date(), jsondata]);
                                         // jsonを受け取って表を更新する
-                                        refreshTable(jsondata);
+                                        // refreshTable(jsondata);
                                         // マトリクスを更新する
                                         refreshLightMatrix(jsondata);
                                         console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
-                                        appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
-                                        appendDataToChart( new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id);
+                                        // appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
                                         outputValueBuffer = splited.slice(i + 1).join('@');
                                         console.log("joined-slicedsplited:")
                                         console.log(outputValueBuffer);
                                         console.log("wawawa");
+                                        appendDataToChart( new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id);
                                     }
                                     else {
                                     }
@@ -453,8 +453,8 @@
         }
 
         window.onload = function () {
-            createTimeline();
-            makeTable();
+            // createTimeline();
+            // makeTable();
             makeLightMatrix();
             // makeLegend();
             const myChart = new Chart(
@@ -480,10 +480,13 @@
 <body>
 
     <h1>BeatSensor Logger</h1>
-
+    
     <!-- <canvas id="chart" width="1" height="1"></canvas> -->
     <div id="chart-container" style="display: flex; justify-content: center; align-items: center;">
-        <div id="chart" style="flex: 1;">
+        <div style="flex: 1;">
+            <canvas id="myChart"></canvas>
+        </div>
+        <!-- <div id="chart" style="flex: 1;">
             <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
         </div>
         <div id="table" style="width: 10rem;">
@@ -498,13 +501,10 @@
                 <tbody>
                 </tbody>
             </table>
-        </div>
+        </div> -->
         <div id="matrix" style="width: 25rem;"></div>
     </div>
 
-    <div>
-        <canvas id="myChart"></canvas>
-    </div>
 
     <div id="legend"></div>
     <br>
@@ -557,7 +557,7 @@
         for(i=0; i<numberOfilluminanceSensors; i++) {
             var dataset = {
               data: [],
-              label: "dataset " + (i+1),
+              label: i + ' (0x1' + i + ')',
               borderColor: getIdColor(i, 50),
               backgroundColor: getIdColor(i, 50, 0.8)
             }
