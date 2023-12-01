@@ -4,6 +4,8 @@ config = {
 		datasets: []
 	},
 	options: {
+		responsive: true,
+		maintainAspectRatio: false,
 		animation: false,
 		stepped: true,
 		interaction: {
@@ -14,6 +16,7 @@ config = {
 		pointRadius: 4,
 		plugins: {
 			legend: {
+				display: false,
 				position: 'right',
 				title: {
 					display: true,
@@ -22,6 +25,11 @@ config = {
 						weight: 'bold'
 					},
 					text: "ID"
+				},
+				labels: {
+					usePointStyle: true,
+					pointStyle: 'line'
+					
 				}
 			}
 		},

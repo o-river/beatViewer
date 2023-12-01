@@ -133,7 +133,7 @@
                 led.className = "legend-content";
                 led.style.paddingLeft = led.style.paddingRight = "0.5rem";
                 led.style.color = getIdColor(id);
-                led.innerHTML = '━ ' + id;
+                led.innerHTML = '\u25ac\u25ac ' + id;
                 legend.appendChild(led);
             }
         }
@@ -149,7 +149,7 @@
             for (var id = 1; id < numberOfilluminanceSensors; id++) {
                 var row = document.createElement("tr");
                 var legend = document.createElement("td");
-                legend.innerHTML = "━";
+                legend.innerHTML = "\u25ac\u25ac";
                 legend.style.color = getIdColor(id);
                 row.appendChild(legend);
 
@@ -269,7 +269,7 @@
                                         console.log(jsondata);
                                         data.push([new Date(), jsondata]);
                                         // jsonを受け取って表を更新する
-                                        // refreshTable(jsondata);
+                                        refreshTable(jsondata);
                                         // マトリクスを更新する
                                         refreshLightMatrix(jsondata);
                                         console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
@@ -454,7 +454,7 @@
 
         window.onload = function () {
             // createTimeline();
-            // makeTable();
+            makeTable();
             makeLightMatrix();
             // makeLegend();
             const myChart = new Chart(
@@ -483,12 +483,12 @@
     
     <!-- <canvas id="chart" width="1" height="1"></canvas> -->
     <div id="chart-container" style="display: flex; justify-content: center; align-items: center;">
-        <div style="flex: 1;">
+        <div style="flex: 1; height: 25rem; width: 30%;">
             <canvas id="myChart"></canvas>
         </div>
         <!-- <div id="chart" style="flex: 1;">
             <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
-        </div>
+        </div> -->
         <div id="table" style="width: 10rem;">
             <table style="text-align: right;">
                 <thead>
@@ -501,7 +501,7 @@
                 <tbody>
                 </tbody>
             </table>
-        </div> -->
+        </div>
         <div id="matrix" style="width: 25rem;"></div>
     </div>
 
