@@ -9,7 +9,7 @@ config = {
 		animation: false,
 		stepped: true,
 		interaction: {
-			intersect: true,
+			intersect: false,
 			mode: 'nearest',
 			axis: 'xy'
 		},
@@ -46,6 +46,10 @@ config = {
 					// 		});
 					// 	});
 					// }
+				},
+				titie: {
+					display: true,
+					text: 'Time'
 				}
 			},
 			y: {
@@ -53,6 +57,10 @@ config = {
 				max: 1050,
 				ticks: {
 					stepSize: 128
+				},
+				title: {
+					display: true,
+					text: 'duty (Luminance of Lights)'
 				}
 			}
 		}
