@@ -45,17 +45,11 @@ config = {
           weight: 'bold'
         },
 				formatter: function(value, context) {
-					// console.log(context);
+					console.log(context);
 					if(datalabelSwitch) return Math.round(value.y);
 					if(context.dataIndex < 2) return '-';
-					else {
-						var t0 = context.dataset.data[context.dataIndex    ].x;
-						var t1 = context.dataset.data[context.dataIndex - 1].x;
-						var t2 = context.dataset.data[context.dataIndex - 2].x;
-						return (Math.round((t0 - t1)/(t1 - t2)*100)/100).toFixed(2);
-					}
+					else return context.dataset.data[context.dataIndex].r.toFixed(2);
 				}
-        // formatter: (value, context) => datalabelSwitch ? Math.round(value.y) : context.detaset.data[-1].x
 			}
 		},
 		scales: {
@@ -63,14 +57,19 @@ config = {
 				type: 'realtime',
 				realtime: {
 					duration: 20000,
-					onRefresh: chart => {
-						chart.data.datasets.forEach(dataset => {
-							dataset.data.push({
-								x: Date.now(),
-								y: Math.random() * 1024
-							});
-						});
-					}
+					// onRefresh: chart => {
+					// 	chart.data.datasets.forEach((dataset, id) => {
+					// 		var timestamp = Date.now();
+					// 		var newdata = Math.random() * 1024;
+					// 		var obj = getDataAnalisys(timestamp, id);
+					// 		dataset.data.push({
+					// 			x: timestamp,
+					// 			y: newdata,
+					// 			e: obj.e,
+					// 			r: obj.r
+					// 		});
+					// 	});
+					// }
 				},
 				titie: {
 					display: true,
