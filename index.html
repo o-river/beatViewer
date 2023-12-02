@@ -6,11 +6,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
     <script src="./config.js"></script>
     <script src="./data.js"></script>
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
+
+        datalabelSwitch = false;
+
+        function doDatalabelSwitch() {
+            datalabelSwitch = !datalabelSwitch;
+        }
 
         // Randomly add a data point every 500ms
         var random = new TimeSeries();
@@ -511,6 +518,8 @@
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
+    <br>
+    <button onclick="doDatalabelSwitch()">datalabelSwitch</button>
     <br>
     <details>
         <summary>デバッグ用入力</summary>
