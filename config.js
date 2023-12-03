@@ -35,6 +35,23 @@ config = {
 					
 				}
 			},
+			zoom: {
+				pan: {
+					enabled: true
+				},
+				zoom: {
+					mode: 'x',
+					wheel: {
+						enabled: true
+					},
+					pinch: {
+						enabled: true
+					}
+				},
+				limit: {
+
+				}
+			},
 			datalabels: {
 				backgroundColor: context => context.dataset.borderColor,
         padding: 4,
@@ -49,7 +66,9 @@ config = {
 					if(datalabelSwitch) return Math.round(value.y);
 					if(context.dataIndex < 2) return '-';
 					else return context.dataset.data[context.dataIndex].r.toFixed(2) + '\ne=' + context.dataset.data[context.dataIndex].e;
-				}
+				},
+				textAlign: 'center',
+				align: 'end'
 			}
 		},
 		scales: {

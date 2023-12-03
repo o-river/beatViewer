@@ -6,6 +6,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
     <script src="./config.js"></script>
@@ -107,7 +109,7 @@
         }
 
         // data.js へ移動
-        // function appendDataToChart(timestamp, newdata = 0, id = 1) {}
+        // function appendDataToChart(timestamp, newdata = 0f, id = 1) {}
 
         function plotTestPoint(plotdata, plotid) {
             // appendDataToSeries(new Date().getTime(), plotdata, plotid);
@@ -465,7 +467,7 @@
             makeTable();
             makeLightMatrix();
             // makeLegend();
-            const myChart = new Chart(
+            myChart = new Chart(
                 document.getElementById('myChart'),
                 config
             );
@@ -521,6 +523,7 @@
     <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
     <button onclick="doDatalabelSwitch()">datalabelSwitch</button>
+    <button onclick="myChart.resetZoom()">reset zoom</button>
     <br>
     <details>
         <summary>デバッグ用入力</summary>
