@@ -48,7 +48,7 @@ config = {
 					console.log(context);
 					if(datalabelSwitch) return Math.round(value.y);
 					if(context.dataIndex < 2) return '-';
-					else return context.dataset.data[context.dataIndex].r.toFixed(2);
+					else return context.dataset.data[context.dataIndex].r.toFixed(2) + '\ne=' + context.dataset.data[context.dataIndex].e;
 				}
 			}
 		},
