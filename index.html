@@ -21,6 +21,11 @@
             datalabelSwitch = !datalabelSwitch;
         }
 
+        function pauseChart() {
+            myChart.options.scales.x.realtime.pause = !myChart.options.scales.x.realtime.pause;
+            myChart.update();
+        }
+
         // Randomly add a data point every 500ms
         var random = new TimeSeries();
         setInterval(function () {
@@ -99,8 +104,8 @@
 
 
         function appendDataToSeries(timestamp, newdata = 0, id = 1) {
-            console.log(newdata);
-            console.log(id);
+            // console.log(newdata);
+            // console.log(id);
             // var timestamp = new Date().getTime();
             illuminanceSerieses[id].append(timestamp, newdata);
             // var xPos = smoothie.options.timestampFormatter(timestamp);
@@ -189,12 +194,16 @@
             name.className = "name";
             name.innerHTML = "ID: " + id;
             name.style.color = getIdColor(id);
+            var lux = document.createElement("div");
+            lux.className = "lux";
+            lux.innerHTML = "--- lx";
             var duty = document.createElement("div");
             duty.className = "duty";
             duty.innerHTML = "duty: " + "---";
             var sensor = document.createElement("div");
             sensor.classList.add("sensor", "id" + String(id));
             sensor.appendChild(name);
+            sensor.appendChild(lux);
             sensor.appendChild(duty);
 
             sensor.style.backgroundColor = getDutyColor(0);
@@ -229,6 +238,12 @@
         function refreshLightMatrix(json) {
             var matrix = document.getElementById("matrix");
             var sensor = matrix.getElementsByClassName("sensor")[json.id - 1];
+            if (config.data.datasets[json.id].data.length) {
+                if(config.data.datasets[json.id].data.slice(-1)[0].lux != null) {
+                    var lx = config.data.datasets[json.id].data.slice(-1)[0].lux;
+                    sensor.getElementsByClassName("lux")[0].innerHTML = lx.toFixed(0) + " lx";
+                }
+            }
             sensor.getElementsByClassName("duty")[0].innerHTML = "duty: " + json.duty[json.id];
             sensor.style.backgroundColor = getDutyColor(json.duty[json.id]);
         }
@@ -250,7 +265,7 @@
                             setTextToArea(1, inputValue);
 
                             inputValueBuffer += inputValue;
-                            console.log(inputValueBuffer.split("\r", 1)[0]);
+                            // console.log(inputValueBuffer.split("\r", 1)[0]);
                             setTextToArea(2, inputValueBuffer);
 
                             // 余計な文字の消去
@@ -260,34 +275,34 @@
                             // 無駄な空行の消去
                             outputValue = outputValue.replace(/^\r/, "");
                             outputValueBuffer += outputValue;
-                            console.log("output:       " + outputValue);
-                            console.log("outputBuffer: " + outputValueBuffer);
-                            console.log(outputValue.match(/\r/));
-                            //console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
+                            // console.log("output:       " + outputValue);
+                            // console.log("outputBuffer: " + outputValueBuffer);
+                            // console.log(outputValue.match(/\r/));
+                            // console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
                             //if (outputValueBuffer.match(/#\d,\d+(\r\n)?/)) {
                             var splited = outputValueBuffer.split(/@/);
-                            console.log(splited);
+                            // console.log(splited);
                             if (splited[0] == "") {
                                 for (var i = 1; i < splited.length; i++) {
-                                    console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
+                                    // console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
                                     if (splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)) {
                                         outputValueSet += splited[i];
                                         // outputValueSet += outputValueBuffer;
                                         setTextToArea(4, splited[i]);
                                         var jsondata = makeJSONfromValueBuffer(splited[i]);
-                                        console.log("jsondata: ")
-                                        console.log(jsondata);
+                                        // console.log("jsondata: ")
+                                        // console.log(jsondata);
                                         data.push([new Date(), jsondata]);
                                         // jsonを受け取って表を更新する
                                         refreshTable(jsondata);
                                         // マトリクスを更新する
                                         refreshLightMatrix(jsondata);
-                                        console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
+                                        // console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
                                         // appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
                                         outputValueBuffer = splited.slice(i + 1).join('@');
-                                        console.log("joined-slicedsplited:")
-                                        console.log(outputValueBuffer);
-                                        console.log("wawawa");
+                                        // console.log("joined-slicedsplited:")
+                                        // console.log(outputValueBuffer);
+                                        // console.log("wawawa");
                                         appendDataToChart( new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id);
                                     }
                                     else {
@@ -299,7 +314,7 @@
 
                             setTextToArea(3, outputValue);
                             setTextToArea(5, outputValueSet);
-                            console.log(data);
+                            // console.log(data);
 
                         }
                     } catch (error) {
@@ -349,7 +364,7 @@
             var json = new Object;
             var b = buf.split(",");
 
-            console.log(b);
+            // console.log(b);
 
             json.time = Number(b.pop());
             json.id = Number(b.pop());
@@ -524,6 +539,7 @@
     <br>
     <button onclick="doDatalabelSwitch()">datalabelSwitch</button>
     <button onclick="myChart.resetZoom()">reset zoom</button>
+    <button onclick="pauseChart()">pause</button>
     <br>
     <details>
         <summary>デバッグ用入力</summary>

@@ -19,7 +19,7 @@ config = {
 		pointRadius: 4,
 		plugins: {
 			legend: {
-				display: false,
+				display: true,
 				position: 'right',
 				title: {
 					display: true,
@@ -31,8 +31,7 @@ config = {
 				},
 				labels: {
 					usePointStyle: true,
-					pointStyle: 'line'
-					
+					pointStyle: 'line'	
 				}
 			},
 			zoom: {
@@ -57,18 +56,21 @@ config = {
         padding: 4,
         borderRadius: 4,
         clip: true,
+				clamp: true,
         color: 'white',
         font: {
           weight: 'bold'
         },
 				formatter: function(value, context) {
-					console.log(context);
+					// console.log(context);
 					if(datalabelSwitch) return Math.round(value.y);
 					if(context.dataIndex < 2) return '-';
-					else return context.dataset.data[context.dataIndex].r.toFixed(2) + '\ne=' + context.dataset.data[context.dataIndex].e;
+					else return context.dataset.data[context.dataIndex].r.toFixed(2)
+					            + '\ne=' + context.dataset.data[context.dataIndex].e;
 				},
 				textAlign: 'center',
-				align: 'end'
+				align: 'right',
+				offset: 8
 			}
 		},
 		scales: {
@@ -97,7 +99,7 @@ config = {
 			},
 			y: {
 				beginAtZero: true,
-				max: 1050,
+				max: 1100,
 				ticks: {
 					stepSize: 128
 				},
