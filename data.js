@@ -10,6 +10,10 @@ function addPlot() {
     myChart.update();
 };
 
+function setLatestErrorcount(id, e = 0) {
+    config.data.datasets[id].data.slice(-1)[0].e = e
+}
+
 function convertToLux(beatInterval) {
     var bcount = 30000 / beatInterval;
     return 63.2 * bcount + 86.8;

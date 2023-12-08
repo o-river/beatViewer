@@ -543,16 +543,20 @@
     <br>
     <details>
         <summary>デバッグ用入力</summary>
-        <input type="number" id="testPlotData" value="512" width="4">
-        @id:<input type="number" id="testPlotId" value="1" width="2">
+        <input type="number" id="testPlotData" value="512" size="4">
+        @id:<input type="number" id="testPlotId" value="1" size="2">
         <button
             onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
         <button
             onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
         <br>
         <input type="file" id="jsonfile" accept="application/json,.json">
-        Extract ID: <input type="number" id="csvid" , value="5" , width="2">
+        Extract ID: <input type="number" id="csvid" value="5" width="2">
         <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
+        <br>
+        id:<input type="number" id="seterrorcountid" value="0" size="4">
+        e:<input type="number" id="seterrorcountvalue" value="0" size="4">
+        <button onclick="setLatestErrorcount(Number(document.getElementById('seterrorcountid').value), Number(document.getElementById('seterrorcountvalue').value))">setLatestErrorcount</button>
         <br>
         <input type="text" id="sendInput">
         <input type="button" value="Send" onclick="sendSerial();">
