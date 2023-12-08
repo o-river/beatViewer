@@ -3,20 +3,40 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@1.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
+    <script src="./config.js"></script>
+    <script src="./data.js"></script>
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
+
+        datalabelSwitch = false;
+
+        function doDatalabelSwitch() {
+            datalabelSwitch = !datalabelSwitch;
+        }
+
+        function pauseChart() {
+            myChart.options.scales.x.realtime.pause = !myChart.options.scales.x.realtime.pause;
+            myChart.update();
+        }
 
         // Randomly add a data point every 500ms
         var random = new TimeSeries();
         setInterval(function () {
             random.append(new Date().getTime(), new Date().getSeconds() % 2);
         }, 1000);
-        
+
         // 最大センサ数 Seriesが作られる数．つまりグラフの本数．とりあえず10個．
         var numberOfilluminanceSensors = 10;
 
         var illuminanceSerieses = {};
-        
+
         var illuminanceChartStyle = {
             // スクロール速度
             millisPerPixel: 100,
@@ -29,14 +49,14 @@
             responsive: true,
             tooltip: true
         }
-        
+
         var illuminanceSeriesStyle = {
             strokeStyle: 'hsla(150deg, 80%, 50%, 1)',
             fillStyle: 'hsla(150deg, 50%, 50%, 0.2)',
             lineWidth: 4,
             interpolation: 'step'
         }
-        
+
         function getIlluminanceSeriesStyle(id = 0) {
             var style = {}
             // 34の根拠: 色相が1周するうちに10個程度の色が取れてかつIDが増えて2周目になっても1周目とかぶりにくそうな値
@@ -46,13 +66,13 @@
             style.interpolation = 'step';
             return style;
         }
-        
+
         function createTimeline() {
             // var chart = new SmoothieChart();
             // chart.addTimeSeries(random, { strokeStyle: 'rgba(0, 255, 0, 1)', fillStyle: 'rgba(0, 255, 0, 0.2)', lineWidth: 4 });
             // chart.streamTo(document.getElementById("chart"), 500);
-            
-            
+
+
             var illuminanceChart = new SmoothieChart(illuminanceChartStyle);
             for (let id = 1; id <= numberOfilluminanceSensors; id++) {
                 var illuminanceSeries = new TimeSeries();
@@ -75,7 +95,7 @@
 
         function drawDataPoint(x, y, radius, color) {
             ctx.beginPath();
-            ctx.arc(x,y,radius,0,2 * Math.PI, false);
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
             ctx.fillStyle = color;
             ctx.fill();
             ctx.closePath();
@@ -84,8 +104,8 @@
 
 
         function appendDataToSeries(timestamp, newdata = 0, id = 1) {
-            console.log(newdata);
-            console.log(id);
+            // console.log(newdata);
+            // console.log(id);
             // var timestamp = new Date().getTime();
             illuminanceSerieses[id].append(timestamp, newdata);
             // var xPos = smoothie.options.timestampFormatter(timestamp);
@@ -93,21 +113,31 @@
             // drawDataPoint(timestamp, newdata, 5, 'hsla(' + (id * 34) + 'deg, 80%, 50%, 1)');
         }
 
+        // data.js へ移動
+        // function appendDataToChart(timestamp, newdata = 0f, id = 1) {}
+
         function plotTestPoint(plotdata, plotid) {
-            appendDataToSeries(new Date().getTime(), plotdata, plotid);
+            // appendDataToSeries(new Date().getTime(), plotdata, plotid);
+            appendDataToChart(new Date().getTime(), plotdata, plotid);
             var d = new Array(10);
             d[plotid] = plotdata;
-            var j = {"id": plotid, "duty": d};
+            var j = { "id": plotid, "duty": d };
             refreshTable(j);
         }
 
         // IDの色をHSLAで返す
-        function getIdColor(id) {
-            return 'hsla(' + (id * 34) + 'deg, 80%, 45%, 1)';
+        function getHSLAColor(h = 0, s = 100, l = 100, a = 1.0) {
+            return 'hsla(' + h + 'deg,' + s + '%,' + l + '%,' + a + ')';
+        }
+
+        function getIdColor(id, lumi = 45, alpha = 1) {
+            return getHSLAColor(id * 34, 80, lumi, alpha);
+            // 'hsla(' + (id * 34) + 'deg, 80%, ' + lumi + '%, ' + alpha + ')';
         }
 
         function getDutyColor(duty, hue = 30) {
-            return "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
+            return getHSLAColor(hue, (duty / 10.24), 80, 1.0);
+            // "hsla(" + hue + "deg," + (duty / 10.24) + "%,80%,1)";
         }
 
         function makeLegend() {
@@ -118,7 +148,7 @@
                 led.className = "legend-content";
                 led.style.paddingLeft = led.style.paddingRight = "0.5rem";
                 led.style.color = getIdColor(id);
-                led.innerHTML = '━ ' + id;
+                led.innerHTML = '\u25ac\u25ac ' + id;
                 legend.appendChild(led);
             }
         }
@@ -130,22 +160,22 @@
             var tbody = table.getElementsByTagName("tbody")[0];
 
             var columnList = ["id", "duty"];
-            
+
             for (var id = 1; id < numberOfilluminanceSensors; id++) {
                 var row = document.createElement("tr");
                 var legend = document.createElement("td");
-                legend.innerHTML = "━";
+                legend.innerHTML = "\u25ac\u25ac";
                 legend.style.color = getIdColor(id);
                 row.appendChild(legend);
 
-                columnList.forEach(function(colname){
+                columnList.forEach(function (colname) {
                     var col = document.createElement("td");
                     col.className = "table-" + colname;
                     row.appendChild(col);
                 })
                 row.className = "table-row";
                 //row.style.display = 'none';
-               tbody.appendChild(row);
+                tbody.appendChild(row);
             }
         }
 
@@ -164,12 +194,16 @@
             name.className = "name";
             name.innerHTML = "ID: " + id;
             name.style.color = getIdColor(id);
+            var lux = document.createElement("div");
+            lux.className = "lux";
+            lux.innerHTML = "--- lx";
             var duty = document.createElement("div");
             duty.className = "duty";
             duty.innerHTML = "duty: " + "---";
             var sensor = document.createElement("div");
             sensor.classList.add("sensor", "id" + String(id));
             sensor.appendChild(name);
+            sensor.appendChild(lux);
             sensor.appendChild(duty);
 
             sensor.style.backgroundColor = getDutyColor(0);
@@ -195,15 +229,21 @@
             }
             return matrix;
         }
-        
+
         function makeLightMatrix() {
             var matrix = document.getElementById("matrix");
             matrix.appendChild(getLightMatrix());
         }
-        
+
         function refreshLightMatrix(json) {
             var matrix = document.getElementById("matrix");
             var sensor = matrix.getElementsByClassName("sensor")[json.id - 1];
+            if (config.data.datasets[json.id].data.length) {
+                if(config.data.datasets[json.id].data.slice(-1)[0].lux != null) {
+                    var lx = config.data.datasets[json.id].data.slice(-1)[0].lux;
+                    sensor.getElementsByClassName("lux")[0].innerHTML = lx.toFixed(0) + " lx";
+                }
+            }
             sensor.getElementsByClassName("duty")[0].innerHTML = "duty: " + json.duty[json.id];
             sensor.style.backgroundColor = getDutyColor(json.duty[json.id]);
         }
@@ -225,7 +265,7 @@
                             setTextToArea(1, inputValue);
 
                             inputValueBuffer += inputValue;
-                            console.log(inputValueBuffer.split("\r", 1)[0]);
+                            // console.log(inputValueBuffer.split("\r", 1)[0]);
                             setTextToArea(2, inputValueBuffer);
 
                             // 余計な文字の消去
@@ -235,34 +275,35 @@
                             // 無駄な空行の消去
                             outputValue = outputValue.replace(/^\r/, "");
                             outputValueBuffer += outputValue;
-                            console.log("output:       " + outputValue);
-                            console.log("outputBuffer: " + outputValueBuffer);
-                            console.log(outputValue.match(/\r/));
-                            //console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
+                            // console.log("output:       " + outputValue);
+                            // console.log("outputBuffer: " + outputValueBuffer);
+                            // console.log(outputValue.match(/\r/));
+                            // console.log(outputValueBuffer.match(/#\d,\d+(\r\n)?/));
                             //if (outputValueBuffer.match(/#\d,\d+(\r\n)?/)) {
                             var splited = outputValueBuffer.split(/@/);
-                            console.log(splited);
-                            if(splited[0] == ""){
-                                for (var i = 1; i < splited.length; i++){
-                                    console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
-                                    if(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)){
+                            // console.log(splited);
+                            if (splited[0] == "") {
+                                for (var i = 1; i < splited.length; i++) {
+                                    // console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
+                                    if (splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)) {
                                         outputValueSet += splited[i];
                                         // outputValueSet += outputValueBuffer;
                                         setTextToArea(4, splited[i]);
                                         var jsondata = makeJSONfromValueBuffer(splited[i]);
-                                        console.log("jsondata: ")
-                                        console.log(jsondata);
+                                        // console.log("jsondata: ")
+                                        // console.log(jsondata);
                                         data.push([new Date(), jsondata]);
                                         // jsonを受け取って表を更新する
                                         refreshTable(jsondata);
                                         // マトリクスを更新する
                                         refreshLightMatrix(jsondata);
-                                        console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
-                                        appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
-                                        outputValueBuffer = splited.slice(i+1).join('@');
-                                        console.log("joined-slicedsplited:")
-                                        console.log(outputValueBuffer);
-                                        console.log("wawawa");
+                                        // console.log("append: " + jsondata.duty[jsondata.id] + ", " + jsondata.id);
+                                        // appendDataToSeries(new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id); //使うセンサIDが配列番号
+                                        outputValueBuffer = splited.slice(i + 1).join('@');
+                                        // console.log("joined-slicedsplited:")
+                                        // console.log(outputValueBuffer);
+                                        // console.log("wawawa");
+                                        appendDataToChart( new Date().getTime(), jsondata.duty[jsondata.id], jsondata.id);
                                     }
                                     else {
                                     }
@@ -273,7 +314,7 @@
 
                             setTextToArea(3, outputValue);
                             setTextToArea(5, outputValueSet);
-                            console.log(data);
+                            // console.log(data);
 
                         }
                     } catch (error) {
@@ -318,12 +359,12 @@
             //     console.log(buf);
             //     return null;
             // }
-            
+
             buf = buf.replace("@", "").replace("#", "");
             var json = new Object;
             var b = buf.split(",");
 
-            console.log(b);
+            // console.log(b);
 
             json.time = Number(b.pop());
             json.id = Number(b.pop());
@@ -436,11 +477,15 @@
             return csvstr;
         }
 
-        window.onload = function() {
-            createTimeline();
+        window.onload = function () {
+            // createTimeline();
             makeTable();
             makeLightMatrix();
             // makeLegend();
+            myChart = new Chart(
+                document.getElementById('myChart'),
+                config
+            );
         };
     </script>
 
@@ -453,19 +498,22 @@
             color: white;
             font-size: 10px;
             pointer-events: none;
-          }
+        }
     </style>
 </head>
 
 <body>
 
     <h1>BeatSensor Logger</h1>
-
+    
     <!-- <canvas id="chart" width="1" height="1"></canvas> -->
     <div id="chart-container" style="display: flex; justify-content: center; align-items: center;">
-        <div id="chart" style="flex: 1;">
-            <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
+        <div style="flex: 1; height: 25rem; width: 30%;">
+            <canvas id="myChart"></canvas>
         </div>
+        <!-- <div id="chart" style="flex: 1;">
+            <canvas id="illuminanceChart" style="width: 100%; height: 25rem;" width="1000" height="400"></canvas>
+        </div> -->
         <div id="table" style="width: 10rem;">
             <table style="text-align: right;">
                 <thead>
@@ -481,23 +529,34 @@
         </div>
         <div id="matrix" style="width: 25rem;"></div>
     </div>
-        
+
+
     <div id="legend"></div>
     <br>
     <button onclick="onConnectButtonClick()">Connect</button>
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
+    <button onclick="doDatalabelSwitch()">datalabelSwitch</button>
+    <button onclick="myChart.resetZoom()">reset zoom</button>
+    <button onclick="pauseChart()">pause</button>
+    <br>
     <details>
         <summary>デバッグ用入力</summary>
-        <input type="number" id="testPlotData" value="512" width="4">
-        @id:<input type="number" id="testPlotId" value="1" width="2">
-        <button onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
-        <button onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
+        <input type="number" id="testPlotData" value="512" size="4">
+        @id:<input type="number" id="testPlotId" value="1" size="2">
+        <button
+            onclick="plotTestPoint(Number(document.getElementById('testPlotData').value), Number(document.getElementById('testPlotId').value))">plotTestPoint</button>
+        <button
+            onclick="plotTestPoint(Math.random() * 1024, Number(document.getElementById('testPlotId').value))">plotRandomPoint</button>
         <br>
         <input type="file" id="jsonfile" accept="application/json,.json">
-        Extract ID: <input type="number" id="csvid", value="5", width="2">
+        Extract ID: <input type="number" id="csvid" value="5" width="2">
         <button onclick="getCSVfromJSONFile('jsonfile')">get CSV</button>
+        <br>
+        id:<input type="number" id="seterrorcountid" value="0" size="4">
+        e:<input type="number" id="seterrorcountvalue" value="0" size="4">
+        <button onclick="setLatestErrorcount(Number(document.getElementById('seterrorcountid').value), Number(document.getElementById('seterrorcountvalue').value))">setLatestErrorcount</button>
         <br>
         <input type="text" id="sendInput">
         <input type="button" value="Send" onclick="sendSerial();">
@@ -507,25 +566,37 @@
     <details>
         <summary>デバッグ用出力</summary>
         <textarea cols="100" rows="6" id="outputArea0" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea1" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea2" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea3" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea4" readonly=""></textarea>
-        
+
         <br>
         <textarea cols="100" rows="6" id="outputArea5" readonly=""></textarea>
     </details>
-        
-        <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
-        </div>
+
+    <div class="smoothie-chart-tooltip" style="position: absolute; display: none; top: 56px; left: 329px;">
+    </div>
+
+    <script>
+        for(i=0; i<numberOfilluminanceSensors; i++) {
+            var dataset = {
+              data: [],
+              label: i + ' (0x1' + i + ')',
+              borderColor: getIdColor(i, 50),
+              backgroundColor: getIdColor(i, 50, 0.8)
+            }
+            config.data.datasets.push(dataset);
+          }
+    </script>
 </body>
 
 </html>
