@@ -269,7 +269,7 @@
                             setTextToArea(2, inputValueBuffer);
 
                             // 余計な文字の消去
-                            outputValue = inputValue.replace(/\|/g, ",").replace("t", "").replace("*", "").replace(/ /g, "");
+                            outputValue = inputValue.replace(/\|/g, ",").replace(/[a-zA-Z]/g, "").replace("*", "").replace(":", ",").replace(/ /g, "");
                             // プロンプトの「> 」行の消去
                             outputValue = outputValue.replace(/^.*>.*$/g, "");
                             // 無駄な空行の消去
@@ -285,7 +285,7 @@
                             if (splited[0] == "") {
                                 for (var i = 1; i < splited.length; i++) {
                                     // console.log(splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/));
-                                    if (splited[i].match(/(\d{1,},){20}#\d,\d{1,}\r\n$/)) {
+                                    if (splited[i].match(/(\d{1,},){20}#\d,\d{1,},\d{1,}\r\n$/)) {
                                         outputValueSet += splited[i];
                                         // outputValueSet += outputValueBuffer;
                                         setTextToArea(4, splited[i]);
@@ -367,6 +367,7 @@
             // console.log(b);
 
             json.time = Number(b.pop());
+            json.infoid = Number(b.pop());
             json.id = Number(b.pop());
             json.duty = new Array();
             json.lqi = new Array();
