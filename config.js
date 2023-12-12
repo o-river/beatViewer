@@ -52,21 +52,15 @@ config = {
 				}
 			},
 			datalabels: {
+				display: false,
 				backgroundColor: context => context.dataset.borderColor,
-        padding: 4,
-        borderRadius: 4,
-        clip: true,
+				padding: 4,
+				borderRadius: 4,
+				clip: true,
 				clamp: true,
-        color: 'white',
-        font: {
-          weight: 'bold'
-        },
-				formatter: function(value, context) {
-					// console.log(context);
-					if(datalabelSwitch) return Math.round(value.y);
-					if(context.dataIndex < 2) return '-';
-					else return context.dataset.data[context.dataIndex].r.toFixed(2)
-					            + '\ne=' + context.dataset.data[context.dataIndex].e;
+				color: 'white',
+				font: {
+					weight: 'bold'
 				},
 				textAlign: 'center',
 				align: 'right',
@@ -77,7 +71,7 @@ config = {
 			x: {
 				type: 'realtime',
 				realtime: {
-					duration: 20000,
+					duration: 30000,
 					// onRefresh: chart => {
 					// 	chart.data.datasets.forEach((dataset, id) => {
 					// 		var timestamp = Date.now();

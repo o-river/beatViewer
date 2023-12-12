@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming@2"></script>
     <script src="./config.js"></script>
     <script src="./data.js"></script>
+    <script src="./datalabel.js"></script>
     <script type="text/javascript" src="./smoothie.js"></script>
     <script type="text/javascript">
 
@@ -24,6 +25,10 @@
         function pauseChart() {
             myChart.options.scales.x.realtime.pause = !myChart.options.scales.x.realtime.pause;
             myChart.update();
+        }
+
+        function setDuration(value) {
+            myChart.options.scales.x.realtime.duration = Number(value);
         }
 
         // Randomly add a data point every 500ms
@@ -481,6 +486,7 @@
             // createTimeline();
             makeTable();
             makeLightMatrix();
+            setDatalabelStyleSelector();
             // makeLegend();
             myChart = new Chart(
                 document.getElementById('myChart'),
@@ -537,10 +543,14 @@
     <br>
     <button onclick="onSaveButtonClick()">Save JSON</button>
     <br>
-    <button onclick="doDatalabelSwitch()">datalabelSwitch</button>
+    datalabels mode:
+    <select id="datalabel-mode"></select>
+    <br>
     <button onclick="myChart.resetZoom()">reset zoom</button>
     <button onclick="pauseChart()">pause</button>
     <br>
+    Duration: <input type="number" id="duration" value="30000" step="1000" style="width: 4rem; text-align: right;">ms
+    <button onclick="setDuration(document.getElementById('duration').value)">Set</button>
     <details>
         <summary>デバッグ用入力</summary>
         <input type="number" id="testPlotData" value="512" size="4">
@@ -591,7 +601,7 @@
             var dataset = {
               data: [],
               label: i + ' (0x1' + i + ')',
-              borderColor: getIdColor(i, 50),
+              borderColor: getIdColor(i, 50, 0.8),
               backgroundColor: getIdColor(i, 50, 0.8)
             }
             config.data.datasets.push(dataset);
